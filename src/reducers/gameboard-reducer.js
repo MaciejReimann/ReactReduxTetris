@@ -15,6 +15,11 @@ import {
   getRows
 } from "../logic/tetrisCreation";
 import { getRandomTetris } from "../logic/tetrisDefinition";
+import {
+  movePoints,
+  sortPointsInMatrix,
+  getRowsAboveEmptyRows
+} from "../helpers/pointsArrays";
 
 export default function(state = initialState, action) {
   const {
@@ -96,31 +101,46 @@ export default function(state = initialState, action) {
             )
         : squareCenters;
 
-      const nextGameboard = Array(board.y / pixel)
-        .fill()
-        .map((n, index) =>
-          nextSquareCenters.filter(p => (p.y - pixel / 2) / pixel === index)
-        );
-
-      const nextFullRows = nextGameboard.filter(
-        row => row.length >= board.x / pixel
+      const nextGameboard = sortPointsInMatrix(nextSquareCenters)(pixel)(
+        board.y
+      );
+      const fullRowsIntoEmptyRows = nextGameboard.map(
+        row => (row.length >= board.x / pixel ? [] : row)
       );
 
-      const nextFullRowsIndex = nextFullRows.length
-        ? nextFullRows
-            .map(row => (row[0].y - pixel / 2) / pixel)
-            .map(index => nextGameboard.slice(index, nextGameboard.length))
-        : null;
+      const squaresDropped = getRowsAboveEmptyRows(
+        fullRowsIntoEmptyRows.reverse()
+      ).map(row => movePoints(row)(multiplyPoint(DIRECTIONS["DOWN"])(pixel)));
 
-      nextSquareCenters = nextFullRowsIndex
-        ? nextFullRowsIndex
-            .map(i =>
-              nextSquareCenters.filter(p => (p.y - pixel / 2) / pixel !== i)
-            )
-            .flat()
-        : nextSquareCenters;
+      // const squaresDropped = fullRowsRemoved
+      //   .reverse()
+      //   .map(
+      //     (row, i, arr) =>
+      //       row.length === 0 ? (arr[i + 1] ? arr[i + 1] : row) : row
+      // );
 
-      console.log(nextSquareCenters);
+      nextSquareCenters = squaresDropped.flat();
+
+      //
+      // const nextFullRows = nextGameboard.filter(
+      //   row => row.length >= board.x / pixel
+      // );
+
+      // const nextFullRowsIndex = nextFullRows.length
+      //   ? nextFullRows
+      //       .map(row => (row[0].y - pixel / 2) / pixel)
+      //       .map(index => nextGameboard.slice(index, nextGameboard.length))
+      //   : null;
+      //
+      // nextSquareCenters = nextFullRowsIndex
+      //   ? nextFullRowsIndex
+      //       .map(i =>
+      //         nextSquareCenters.filter(p => (p.y - pixel / 2) / pixel !== i)
+      //       )
+      //       .flat()
+      //   : nextSquareCenters;
+
+      console.log(squaresDropped);
 
       const nextSquareVertices = state.pivot
         ? nextSquareCenters.map(center =>

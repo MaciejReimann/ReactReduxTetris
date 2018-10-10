@@ -25,16 +25,28 @@ export const getPointsInLine = arrayOfPoints => axis => value =>
 export const sortPoints = arrayOfPoints =>
   arrayOfPoints.sort((a, b) => a.x - b.x).sort((a, b) => a.y - b.y);
 
-export const findHeightOfMatrix = arrayOfPoints => res =>
-  Math.floor(
-    sortPoints(arrayOfPoints).slice(-1)[0].y -
-      sortPoints(arrayOfPoints)[0].y +
-      1 / res
-  );
-
-export const sortPointsinMatrix = arrayOfPoints => res =>
-  Array(findHeightOfMatrix(arrayOfPoints)(res))
+export const sortPointsInMatrix = arrayOfPoints => res => height =>
+  Array(height / res)
     .fill()
     .map((_, i) =>
-      arrayOfPoints.filter(p => p.y > p.y / res && p.y <= p.y / (2 * res))
+      arrayOfPoints.filter(
+        point => point.y > i * res && point.y <= (i + 1) * res
+      )
     );
+
+export const findHangingRows = matrix =>
+  matrix.reduce(
+    (acc, row, i, arr) =>
+      !row.length && i < arr.length - 1 && arr.find((r, j) => r.length && j > i)
+        ? Object.assign(acc, {
+            toDrop: acc.toDrop.concat([arr.slice(i + 1)])
+          })
+        : row.length && arr.slice(0, i + 1).every(r => r.length)
+          ? Object.assign(acc, {
+              toSave: acc.toSave.concat(row)
+            })
+          : Object.assign(acc, {
+              toSave: acc.toSave
+            }),
+    { toDrop: [], toSave: [] }
+  );

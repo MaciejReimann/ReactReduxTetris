@@ -4,8 +4,8 @@ import {
   movePoints,
   getPointsInLine,
   sortPoints,
-  findHeightOfMatrix,
-  sortPointsinMatrix
+  sortPointsInMatrix,
+  findHangingRows
 } from "../../helpers/pointsArrays";
 import { getRandomTetris } from "../../logic/tetrisDefinition";
 
@@ -169,77 +169,7 @@ test("Puts { x: 2, y: 3 } before { x: 0, y: 4 }", () => {
   expect(sortPoints(pointsIn)).toEqual(pointsOut);
 });
 
-// findHeightOfMatrix
-test("Returns 1", () => {
-  const pointsIn = [{ x: 2, y: 3 }];
-  expect(findHeightOfMatrix(pointsIn)(1)).toBe(1);
-});
-
-test("Returns 3", () => {
-  const pointsIn = [
-    { x: 2, y: 3 },
-    { x: 1, y: 4 },
-    { x: 0, y: 4 },
-    { x: 0, y: 2 }
-  ];
-  expect(findHeightOfMatrix(pointsIn)(1)).toBe(3);
-});
-
-test("Returns 2", () => {
-  const pointsIn = [
-    { x: 2, y: 3 },
-    { x: 1, y: 4 },
-    { x: 0, y: 4 },
-    { x: 0, y: 2 }
-  ];
-  expect(findHeightOfMatrix(pointsIn)(2)).toBe(2);
-});
-
-test("Returns 2", () => {
-  const pointsIn = [
-    { x: 2, y: 3 },
-    { x: 1, y: 4 },
-    { x: 0, y: 4 },
-    { x: 0, y: 2 }
-  ];
-  expect(findHeightOfMatrix(pointsIn)(0.5)).toBe(4);
-});
-
-test("Returns 3", () => {
-  const pointsIn = [
-    { x: 2, y: 3 },
-    { x: 1, y: 4 },
-    { x: 0, y: 4 },
-    { x: 0, y: 2 }
-  ];
-  expect(findHeightOfMatrix(pointsIn)(1)).toBe(3);
-});
-
-test("Returns 2", () => {
-  const pointsIn = [
-    { x: 2, y: 4 },
-    { x: 1, y: 4 },
-    { x: 0, y: 4 },
-    { x: 0, y: 4 }
-  ];
-  expect(findHeightOfMatrix(pointsIn)(1)).toBe(1);
-});
-
-test("Returns 4", () => {
-  const pointsIn = [
-    { x: 2, y: 1 },
-    { x: 1, y: 4 },
-    { x: 0, y: 4 },
-    { x: 0, y: 4 }
-  ];
-  expect(findHeightOfMatrix(pointsIn)(1)).toBe(4);
-});
-test("Returns 10", () => {
-  const pointsIn = [{ x: 2, y: 1 }, { x: 1, y: 10 }];
-  expect(findHeightOfMatrix(pointsIn)(1)).toBe(10);
-});
-
-// sortPointsinMatrix
+// sortPointsInMatrix
 test("Truthy", () => {
   const pointsIn = [
     { x: 2, y: 3 },
@@ -248,22 +178,116 @@ test("Truthy", () => {
     { x: 0, y: 2 }
   ];
   const pointsOut = [
+    [],
     [{ x: 0, y: 2 }],
     [{ x: 2, y: 3 }],
-    [{ x: 0, y: 4 }, { x: 1, y: 4 }]
+    [{ x: 1, y: 4 }, { x: 0, y: 4 }],
+    []
   ];
-  expect(sortPointsinMatrix(pointsIn)(0.5)).toEqual(pointsOut);
+  expect(sortPointsInMatrix(pointsIn)(1)(5)).toEqual(pointsOut);
 });
 
-// test("Truthy", () => {
-//   const pointsIn = [
-//     { x: 2, y: 4 },
-//     { x: 1, y: 4 }
-//   ];
-//   const pointsOut = [
-//     [],
-//     [{ x: 2, y: 3 }],
-//     [{ x: 0, y: 4 }, { x: 1, y: 4 }, { x: 0, y: 2 }]
-//   ];
-//   expect(sortPointsinMatrix(pointsIn)(1)).toEqual([pointsIn]);
-// });
+test("Truthy", () => {
+  const pointsIn = [
+    { x: 5, y: 4 },
+    { x: 1, y: 4 },
+    { x: 0, y: 4 },
+    { x: -1, y: 4 }
+  ];
+  const pointsOut = [
+    [],
+    [],
+    [],
+    [{ x: 5, y: 4 }, { x: 1, y: 4 }, { x: 0, y: 4 }, { x: -1, y: 4 }],
+    [],
+    []
+  ];
+  expect(sortPointsInMatrix(pointsIn)(1)(6)).toEqual(pointsOut);
+});
+
+test("Truthy", () => {
+  const pointsIn = [
+    { x: 2, y: 3 },
+    { x: 1, y: 4 },
+    { x: 0, y: 4 },
+    { x: 0, y: 2 }
+  ];
+  const pointsOut = [
+    [],
+    [],
+    [],
+    [{ x: 0, y: 2 }],
+    [],
+    [{ x: 2, y: 3 }],
+    [],
+    [{ x: 1, y: 4 }, { x: 0, y: 4 }],
+    [],
+    []
+  ];
+  expect(sortPointsInMatrix(pointsIn)(0.5)(5)).toEqual(pointsOut);
+});
+
+// findHangingRows
+
+test("Second to drop one time and third to drop two times, nothing to save", () => {
+  const input = [[], [], [3]];
+  const output = {
+    toDrop: [[[], [3]], [[3]]],
+    toSave: []
+  };
+  expect(findHangingRows(input)).toEqual(output);
+});
+
+test("Last two to drop, nothing to save", () => {
+  const input = [[], [3], []];
+  const output = {
+    toDrop: [[[3], []]],
+    toSave: []
+  };
+  expect(findHangingRows(input)).toEqual(output);
+});
+
+test("Last three to drop one time, last one to drop again, nothing to save", () => {
+  const input = [[], [3], [], [1]];
+  const output = {
+    toDrop: [[[3], [], [1]], [[1]]],
+    toSave: []
+  };
+  expect(findHangingRows(input)).toEqual(output);
+});
+
+test("Nothing to drop, first one to save", () => {
+  const input = [[3], [], []];
+  const output = {
+    toDrop: [],
+    toSave: [3]
+  };
+  expect(findHangingRows(input)).toEqual(output);
+});
+
+test("Last two to drop, first one to save", () => {
+  const input = [[1], [], [3], [2]];
+  const output = {
+    toDrop: [[[3], [2]]],
+    toSave: [1]
+  };
+  expect(findHangingRows(input)).toEqual(output);
+});
+
+test("Nothing to drop, two first to save", () => {
+  const input = [[3], [3], [], []];
+  const output = {
+    toDrop: [],
+    toSave: [3, 3]
+  };
+  expect(findHangingRows(input)).toEqual(output);
+});
+
+test("Nothing to drop, nothing to save", () => {
+  const input = [[], [], []];
+  const output = {
+    toDrop: [],
+    toSave: []
+  };
+  expect(findHangingRows(input)).toEqual(output);
+});
